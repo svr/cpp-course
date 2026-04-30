@@ -24,9 +24,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Стандартний checkout коду. v4 - поточна стабільна major.
+      # Стандартний checkout коду. v6 - найсвіжіща версія на данний момент
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # devcontainers/ci - офіційний action від Microsoft, який запускає
       # build всередині devcontainer-а. Послідовність:
