@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <sstream>
+#include <string>
 
 // Debugging exercise notes:
 // this file intentionally contains four runtime defects.
@@ -44,9 +44,7 @@ long parse_long(const char* text) {
     const long value = std::strtol(text, &end, 10);
 
     if (end == text) {
-        std::ostringstream oss;
-        oss << "cannot parse " << text << " as long type";
-        throw oss.str();
+        throw "cannot parse " + std::string(text) + " as long type";
     }
 
     return value;
@@ -61,9 +59,7 @@ double parse_double(const char* text) {
     const double value = std::strtod(text, &end);
 
     if (end == text) {
-        std::ostringstream oss;
-        oss << "cannot parse " << text << " as double type";
-        throw oss.str();
+        throw "cannot parse " + std::string(text) + " as double type";
     }
 
     return value;
@@ -73,9 +69,7 @@ Frame parse_frame(char line[]) {
     char* fields[EXPECTED_FIELD_COUNT] = {};
     const int field_count = split_line(line, fields, EXPECTED_FIELD_COUNT);
     if(field_count < EXPECTED_FIELD_COUNT) {
-        std::ostringstream oss;
-        oss << "expected " << EXPECTED_FIELD_COUNT << " fields but got " << field_count;
-        throw  oss.str();
+        throw "expected " + std::to_string(EXPECTED_FIELD_COUNT) + " fields but got " + std::to_string(field_count);
     }
 
     Frame frame{};
@@ -91,6 +85,9 @@ Frame parse_frame(char line[]) {
 
 double compute_frame_rate_hz(const Frame frames[], int frame_count) {
     const long elapsed_ms = frames[frame_count - 1].timestamp_ms - frames[0].timestamp_ms;
+    if(elapsed_ms == 0) {
+        throw "elapsed_ms cannot be zero";
+    }
 
     return static_cast<double>((frame_count - 1) * 1000 / elapsed_ms);
 }
@@ -99,27 +96,35 @@ int read_frames(const char* path, Frame frames[], int max_frames) {
     std::ifstream input{path};
     if (!input) {
         std::cerr << "error: failed to open input file: " << path << '\n';
-        return 0;
+        return -1;
     }
 
     int frame_count = 0;
     char line[MAX_LINE_LENGTH];
 
-    while (input.getline(line, MAX_LINE_LENGTH)) {
+    while (input.getline(line, MAX_LINE_LENGTH) && frame_count < max_frames) {
         if (line[0] == '\0') {
             continue;
         }
 
-        if (frame_count < max_frames) {
-            try {
-                frames[frame_count] = parse_frame(line);
-            } catch(const std::string& message) {
-                std::cerr << "error parsing line " << frame_count + 1 << " of input file: " << message << '\n';
-                std::exit(1);
-            }
-
-            ++frame_count;
+        try {
+            frames[frame_count] = parse_frame(line);
+        } catch(const std::string& message) {
+            std::cerr << "error: on line " << frame_count + 1 << " of input file: " << message << '\n';
+            return -1;
         }
+
+        if(frame_count > 0 && frames[frame_count].timestamp_ms == frames[frame_count-1].timestamp_ms) {
+            std::cerr << "error: same timestamp value " << frames[frame_count].timestamp_ms << " on lines " << frame_count << " and " << frame_count + 1 << '\n';
+            return -1;
+        }
+
+        ++frame_count;
+    }
+
+    if(frame_count == 0) {
+        std::cerr << "error: empty file: " << path << '\n';
+        return -1;
     }
 
     return frame_count;
