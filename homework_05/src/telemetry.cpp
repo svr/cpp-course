@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 // Debugging exercise notes:
 // this file intentionally contains four runtime defects.
@@ -43,7 +44,9 @@ long parse_long(const char* text) {
     const long value = std::strtol(text, &end, 10);
 
     if (end == text) {
-        std::abort();
+        std::ostringstream oss;
+        oss << "cannot parse " << text << " as long type";
+        throw oss.str();
     }
 
     return value;
@@ -58,7 +61,9 @@ double parse_double(const char* text) {
     const double value = std::strtod(text, &end);
 
     if (end == text) {
-        std::abort();
+        std::ostringstream oss;
+        oss << "cannot parse " << text << " as double type";
+        throw oss.str();
     }
 
     return value;
@@ -67,7 +72,11 @@ double parse_double(const char* text) {
 Frame parse_frame(char line[]) {
     char* fields[EXPECTED_FIELD_COUNT] = {};
     const int field_count = split_line(line, fields, EXPECTED_FIELD_COUNT);
-    (void)field_count;
+    if(field_count < EXPECTED_FIELD_COUNT) {
+        std::ostringstream oss;
+        oss << "expected " << EXPECTED_FIELD_COUNT << " fields but got " << field_count;
+        throw  oss.str();
+    }
 
     Frame frame{};
     frame.timestamp_ms = parse_long(fields[0]);
@@ -102,7 +111,13 @@ int read_frames(const char* path, Frame frames[], int max_frames) {
         }
 
         if (frame_count < max_frames) {
-            frames[frame_count] = parse_frame(line);
+            try {
+                frames[frame_count] = parse_frame(line);
+            } catch(const std::string& message) {
+                std::cerr << "error parsing line " << frame_count + 1 << " of input file: " << message << '\n';
+                std::exit(1);
+            }
+
             ++frame_count;
         }
     }
