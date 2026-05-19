@@ -34,8 +34,6 @@ DropSolution compute_drop_solution(const BallisticsInput& input) {
         l = 1.0;
     } else {
         solution.status_code = 1;
-        // solution.status_message
-        // std::cerr << "Uknown ammo: " << ammo_name << "\n";
         return solution;
     }
 
@@ -51,7 +49,6 @@ DropSolution compute_drop_solution(const BallisticsInput& input) {
 
     if (acos_arg < -1 || acos_arg > 1) {
         solution.status_code = 2;
-        // std::cerr << "Error in calculations. Height " << input.drone_z << " is too big (" << acos_arg << ")\n";
         return solution;
     }
 

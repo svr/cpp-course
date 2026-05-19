@@ -21,7 +21,6 @@ struct DropSolution {
     float drone_x;
     float drone_y;
     short status_code;
-    const char* status_message;
 };
 
 DropSolution compute_drop_solution(const BallisticsInput&);
