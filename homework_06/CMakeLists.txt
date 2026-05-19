@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(homework_06 CXX)
+project(homework_06 LANGUAGES CXX)
 
 add_library(ballistics src/ballistics.cpp)
 target_include_directories(ballistics PUBLIC include)
@@ -9,10 +9,9 @@ add_executable(ballistics_cli src/main.cpp)
 target_link_libraries(ballistics_cli PRIVATE ballistics)
 
 if(NOT CMAKE_CROSSCOMPILING)
+  enable_testing()
 
   include(FetchContent)
-
-  include(GoogleTest)
 
   FetchContent_Declare(
 
@@ -24,7 +23,9 @@ if(NOT CMAKE_CROSSCOMPILING)
 
   )
 
+
   FetchContent_MakeAvailable(googletest)
+  include(GoogleTest)
 
   add_executable(ballistics_tests tests/ballistics_tests.cpp)
 
