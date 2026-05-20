@@ -51,5 +51,4 @@ jobs:
           # на runner-і для runCmd.
           push: never
           runCmd: |
-            cmake -S . -B build -G Ninja
-            cmake --build build
+            make quality

@@ -1,0 +1,18 @@
+Checks: >
+  -*,
+  bugprone-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -modernize-use-trailing-return-type,
+  -readability-avoid-const-params-in-decls,
+  -readability-function-cognitive-complexity,
+  -readability-identifier-naming,
+  -readability-magic-numbers,
+  misc-unused-using-decls,
+
+HeaderFilterRegex: '(^|/)(homework_6|include|src)/'
+WarningsAsErrors: clang-analyzer-*,

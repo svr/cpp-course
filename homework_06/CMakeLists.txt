@@ -9,28 +9,21 @@ add_executable(ballistics_cli src/main.cpp)
 target_link_libraries(ballistics_cli PRIVATE ballistics)
 
 if(NOT CMAKE_CROSSCOMPILING)
-  enable_testing()
+    enable_testing()
 
-  include(FetchContent)
+    include(FetchContent)
 
-  FetchContent_Declare(
+    FetchContent_Declare(
+        googletest URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+                       DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 
-      googletest
+    FetchContent_MakeAvailable(googletest)
+    include(GoogleTest)
 
-      URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+    add_executable(ballistics_tests tests/ballistics_tests.cpp)
 
-      DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    target_link_libraries(ballistics_tests PRIVATE ballistics GTest::gtest_main)
 
-  )
-
-
-  FetchContent_MakeAvailable(googletest)
-  include(GoogleTest)
-
-  add_executable(ballistics_tests tests/ballistics_tests.cpp)
-
-  target_link_libraries(ballistics_tests PRIVATE ballistics GTest::gtest_main)
-
-  gtest_discover_tests(ballistics_tests DISCOVERY_MODE PRE_TEST)
+    gtest_discover_tests(ballistics_tests DISCOVERY_MODE PRE_TEST)
 
 endif()

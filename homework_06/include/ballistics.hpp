@@ -1,7 +1,7 @@
 
 
 constexpr int MAX_AMMO_NAME_LENGTH = 16;
-constexpr float EPS = 1e-6f;
+constexpr float EPS = 1e-6F;
 
 
 struct BallisticsInput {
@@ -23,4 +23,4 @@ struct DropSolution {
     short status_code;
 };
 
-DropSolution compute_drop_solution(const BallisticsInput&);
+DropSolution compute_drop_solution(const BallisticsInput& input);
