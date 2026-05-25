@@ -23,6 +23,16 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -33,6 +43,10 @@
     {
       "name": "relwithdebinfo",
       "configurePreset": "relwithdebinfo"
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug"
     }
   ]
 }

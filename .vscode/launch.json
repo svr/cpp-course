@@ -2,10 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "C/C++: build and debug active file",
+      "name": "Debug telemetry_check (homework_05)",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${command:cmake.launchTargetPath}",
+      "program": "${workspaceFolder}/build/debug/homework_05/telemetry_check",
       "args": [
         "${workspaceFolder}/homework_05/data/good.txt"
       ],
@@ -21,7 +21,7 @@
           "ignoreFailures": true
         }
       ],
-      "preLaunchTask": "CMake: build"
+      "preLaunchTask": "Build telemetry_check"
     }
   ]
 }

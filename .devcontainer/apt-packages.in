@@ -14,3 +14,8 @@ cmake
 clang-format
 cmake-format
 ninja-build
+
+gdb
+gdbserver
+gdb-multiarch
+valgrind
