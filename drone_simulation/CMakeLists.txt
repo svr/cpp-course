@@ -7,6 +7,9 @@ include(FetchContent)
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
 FetchContent_MakeAvailable(json)
 
-add_executable(drone_simulation src/main.cpp)
+add_library(drone_simulation_lib src/drone_simulation.cpp)
+target_link_libraries(drone_simulation_lib PRIVATE nlohmann_json::nlohmann_json)
+target_include_directories(drone_simulation_lib PUBLIC include)
 
-target_link_libraries(drone_simulation PRIVATE nlohmann_json::nlohmann_json)
+add_executable(drone_simulation src/main.cpp)
+target_link_libraries(drone_simulation PRIVATE drone_simulation_lib nlohmann_json::nlohmann_json)
