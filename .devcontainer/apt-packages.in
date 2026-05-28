@@ -8,6 +8,7 @@ git
 
 gcc
 clang
+clang-tools
 clangd
 clang-tidy
 make
