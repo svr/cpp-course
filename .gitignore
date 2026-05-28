@@ -77,3 +77,6 @@ obj/
 # OS
 .DS_Store
 Thumbs.db
+
+
+drone_simulation/data/simulation.json

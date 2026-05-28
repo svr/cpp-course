@@ -2,18 +2,33 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build telemetry_check",
+      "label": "CMake Debug Build",
       "type": "shell",
-      "command": "cmake --build --preset debug --target telemetry_check",
+      "command": "cmake",
+      "args": [
+        "-S",
+        ".",
+        "-B",
+        "build",
+        "-DCMAKE_BUILD_TYPE=Debug"
+      ],
+      "group": "build"
+    },
+    {
+      "label": "Build Executable",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "build",
+        "--target",
+        "drone_simulation"
+      ],
+      "dependsOn": "CMake Debug Build",
       "group": {
         "kind": "build",
         "isDefault": true
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      },
-      "problemMatcher": "$gcc"
+      }
     }
   ]
 }
