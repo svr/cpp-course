@@ -18,5 +18,6 @@ struct Coord {
 float length(const Coord& coord);
 float distance(const Coord& coord1, const Coord& coord2);
 float direction(const Coord& coord);
+float angleDifference(float a, float b);
 Coord newPosition(const Coord& coord, float dir, float dist);
 Coord normalize(const Coord& coord);

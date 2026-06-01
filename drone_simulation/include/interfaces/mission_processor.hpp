@@ -15,7 +15,7 @@ class MissionProcessor {
     float targetDirection = 0;
     float turnStartTime = 0;
     float turnDuration = 0;
-
+    float turnStartDirection = 0;
 
     SimStep simStep;
 

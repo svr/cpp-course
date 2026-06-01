@@ -71,6 +71,14 @@ float direction(const Coord& coord) {
     return std::atan2(coord.y, coord.x);
 }
 
+float angleDifference(float a, float b) {
+    float diff = std::fmod(a - b + M_PI, 2.0 * M_PI);
+    if (diff < 0.0f) {
+         diff += 2.0 * M_PI;
+    }
+    return diff - M_PI;
+}
+
 Coord normalize(const Coord& coord) {
     float len = length(coord);
     if (std::abs(len) < EPSILON) {

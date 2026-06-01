@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <algorithm>
 
 #include "analytical_solver.hpp"
 
@@ -22,7 +23,7 @@ float AnalyticalSolver::calcHDistance(const AmmoParams& ammo, const float height
 
     if (acos_arg < -1 || acos_arg > 1) {
         std::cerr << "Error in calculations. Height is too big (" << acos_arg << ")\n";
-
+        acos_arg = std::clamp(acos_arg, -1.0f, 1.0f);
     }
 
     float phi = std::acos(acos_arg);
