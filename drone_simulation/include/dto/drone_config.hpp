@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 #include "common.hpp"
 #include "coord.hpp"
@@ -9,7 +10,7 @@ struct DroneConfig {
     float initialDir;
     float attackSpeed;
     float accelPath;
-    char  ammoName[MAX_NAME_LENGTH];
+    std::string ammoName;
     float arrayTimeStep;
     float simTimeStep;
     float hitRadius;

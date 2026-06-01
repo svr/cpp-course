@@ -1,4 +1,5 @@
 #include <cmath>
+#include <string>
 #include <algorithm>
 
 #include "coord.hpp"
@@ -7,7 +8,7 @@
 #include "mission_processor.hpp"
 
 
-MissionProcessor::MissionProcessor(IBallisticSolver* solver, ITargetProvider* targetProvider, IConfigLoader* configLoader): 
+MissionProcessor::MissionProcessor(IBallisticSolver* solver, ITargetProvider* targetProvider, IConfigLoader* configLoader):
 solver{solver}, targetProvider{targetProvider}, configLoader{configLoader} {
 }
 
@@ -29,7 +30,7 @@ void MissionProcessor::reset() {
     simStep.targetIdx = -1;
 }
 
-void MissionProcessor::init(const char* configfile, const char* ammofile, const char* targetsfile) {
+void MissionProcessor::init(const std::string& configfile, const std::string& ammofile, const std::string& targetsfile) {
     configLoader->load(configfile, ammofile);
     targetProvider->load(targetsfile);
 

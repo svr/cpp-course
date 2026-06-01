@@ -1,7 +1,6 @@
 #pragma once
 
 constexpr int MAX_STEPS = 10000;
-constexpr int MAX_NAME_LENGTH = 32;
 
 constexpr float EPSILON = 1e-6f;
 constexpr float GRAVITY = 9.81f;

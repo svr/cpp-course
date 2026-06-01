@@ -1,5 +1,7 @@
 #include <fstream>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
@@ -7,14 +9,7 @@ using json = nlohmann::json;
 #include "common.hpp"
 #include "json_target_provider.hpp"
 
-JsonTargetProvider::~JsonTargetProvider() {
-    for (int i = 0; i < targetCount; i++) {
-        delete[] targets[i];
-    }
-    delete[] targets;
-}
-
-void JsonTargetProvider::load(const char* file) {
+void JsonTargetProvider::load(const std::string& file) {
     std::ifstream targetsfs(file);
     if (!targetsfs) {
         throw std::runtime_error("Failed to open targets file");
@@ -30,9 +25,8 @@ void JsonTargetProvider::load(const char* file) {
     DEBUG(targetCount);
     DEBUG(timeSteps);
 
-    targets = new Coord* [targetCount];
+    targets = std::vector(targetCount, std::vector<Coord>(timeSteps));
     for (int i = 0; i < targetCount; i++) {
-        targets[i] = new Coord[timeSteps];
         for (int j = 0; j < timeSteps; j++) {
             targets[i][j].x = targetsJson["targets"][i]["positions"][j]["x"];
             targets[i][j].y = targetsJson["targets"][i]["positions"][j]["y"];
