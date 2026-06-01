@@ -1,12 +1,13 @@
 #include <fstream>
 #include <stdexcept>
+#include <string>
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 #include "file_config_loader.hpp"
 
-DroneConfig FileConfigLoader::loadConfig(const char* file) const {
+DroneConfig FileConfigLoader::loadConfig(const std::string& file) const {
     std::ifstream configStream(file);
     if (!configStream) {
         throw std::runtime_error("Failed to open config file");
@@ -28,14 +29,12 @@ DroneConfig FileConfigLoader::loadConfig(const char* file) const {
     config.hitRadius     = configJson["simulation"]["hitRadius"];
     config.arrayTimeStep = configJson["targetArrayTimeStep"];
 
-    std::string ammoNameStr = configJson["ammo"].get<std::string>();
-    std::strncpy(config.ammoName, ammoNameStr.c_str(), MAX_NAME_LENGTH - 1);
-    config.ammoName[MAX_NAME_LENGTH - 1] = '\0';
+    config.ammoName = configJson["ammo"].get<std::string>();
 
     return config;
 }
 
-AmmoParams FileConfigLoader::loadAmmoParams(const char* name, const char* file) const {
+AmmoParams FileConfigLoader::loadAmmoParams(const std::string& name, const std::string& file) const {
     std::ifstream ammoStream(file);
     if (!ammoStream) {
         throw std::runtime_error("Failed to open ammo file");
@@ -49,10 +48,9 @@ AmmoParams FileConfigLoader::loadAmmoParams(const char* name, const char* file) 
 
     for (int i = 0; i < ammoCount; ++i) {
         std::string ammoName = ammoList[i]["name"].get<std::string>();
-        if (std::strncmp(name, ammoName.c_str(), MAX_NAME_LENGTH) == 0) {
+        if (name == ammoName) {
             AmmoParams ammoParams;
-            std::strncpy(ammoParams.name, ammoName.c_str(), MAX_NAME_LENGTH - 1);
-            ammoParams.name[MAX_NAME_LENGTH - 1] = '\0';
+            ammoParams.name = name;
             ammoParams.mass = ammoList[i]["mass"];
             ammoParams.drag = ammoList[i]["drag"];
             ammoParams.lift = ammoList[i]["lift"];
@@ -63,7 +61,7 @@ AmmoParams FileConfigLoader::loadAmmoParams(const char* name, const char* file) 
     throw std::runtime_error("Error: Unknown ammo name ");
 };
 
-void FileConfigLoader::load(const char* configfile = "config.json" , const char* ammofile = "ammo.json") {
+void FileConfigLoader::load(const std::string& configfile = "config.json" , const std::string& ammofile = "ammo.json") {
     config = loadConfig(configfile);
     ammo = loadAmmoParams(config.ammoName, ammofile);
 }

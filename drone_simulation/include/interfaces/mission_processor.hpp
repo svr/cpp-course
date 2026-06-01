@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+
 #include "sim_step.hpp"
 #include "ballistic_solver.hpp"
 #include "target_provider.hpp"
@@ -22,7 +24,7 @@ class MissionProcessor {
     public:
     MissionProcessor(IBallisticSolver* solver, ITargetProvider* targetProvider, IConfigLoader* configLoader);
     ~MissionProcessor();
-    void init(const char* configfile, const char* ammofile, const char* targetsfile);
+    void init(const std::string& configfile, const std::string& ammofile, const std::string& targetsfile);
     bool hasNext() const;
     SimStep step();
     int getCurrentStep() const;

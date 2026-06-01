@@ -1,8 +1,10 @@
 #pragma once
+#include <string>
+
 #include "common.hpp"
 
 struct AmmoParams {
-    char name[MAX_NAME_LENGTH];
+    std::string name;
     float mass;
     float drag;
     float lift;
