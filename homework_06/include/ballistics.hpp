@@ -3,6 +3,11 @@
 constexpr int MAX_AMMO_NAME_LENGTH = 16;
 constexpr float EPS = 1e-6F;
 
+enum class StatusCode {
+    Ok = 0,
+    UknownAmmo = 1,
+    CalcEror = 3
+};
 
 struct BallisticsInput {
     float drone_x;
@@ -20,7 +25,7 @@ struct DropSolution {
     float fire_y;
     float drone_x;
     float drone_y;
-    short status_code;
+    StatusCode status_code;
 };
 
 DropSolution compute_drop_solution(const BallisticsInput& input);

@@ -35,7 +35,7 @@ TEST(Ballistics, GLIDING_VOG_FarTarget) {
 
   const DropSolution solution = compute_drop_solution(input);
 
-  EXPECT_EQ(solution.status_code, 0);
+  EXPECT_EQ(solution.status_code, StatusCode::Ok);
   EXPECT_NEAR(solution.fire_x, 242.711, 0.01);
   EXPECT_NEAR(solution.fire_y, 242.711, 0.01);
 }
@@ -55,7 +55,7 @@ TEST(Ballistics, GLIDING_RKG_FarTarget) {
 
   const DropSolution solution = compute_drop_solution(input);
 
-  EXPECT_EQ(solution.status_code, 0);
+  EXPECT_EQ(solution.status_code, StatusCode::Ok);
   EXPECT_NEAR(solution.fire_x, 966.534, 0.01);
   EXPECT_NEAR(solution.fire_y, 404.519, 0.01);
 }
@@ -75,7 +75,7 @@ TEST(Ballistics, RKG_3_IntermediatePoint) {
 
   const DropSolution solution = compute_drop_solution(input);
 
-  EXPECT_EQ(solution.status_code, 0);
+  EXPECT_EQ(solution.status_code, StatusCode::Ok);
   EXPECT_NEAR(solution.drone_x, 504.6, 0.01);
   EXPECT_NEAR(solution.drone_y, 193.6, 0.01);
 
@@ -98,7 +98,7 @@ TEST(Ballistics, M67_StartAboveTarget) {
 
   const DropSolution solution = compute_drop_solution(input);
 
-  EXPECT_EQ(solution.status_code, 0);
+  EXPECT_EQ(solution.status_code, StatusCode::Ok);
   EXPECT_NEAR(solution.drone_x, 478.496, 0.01);
   EXPECT_NEAR(solution.drone_y, 232.0, 0.01);
 
@@ -121,6 +121,6 @@ TEST(Ballistics, UknownAmmo) {
 
   const DropSolution solution = compute_drop_solution(input);
 
-  EXPECT_EQ(solution.status_code, 1);
+  EXPECT_EQ(solution.status_code, StatusCode::UknownAmmo);
 }
 

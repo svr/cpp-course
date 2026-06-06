@@ -39,7 +39,7 @@ DropSolution compute_drop_solution(const BallisticsInput& input)
     l = 1.0;
   }
   else {
-    solution.status_code = 1;
+    solution.status_code = StatusCode::UknownAmmo;
     return solution;
   }
 
@@ -54,7 +54,7 @@ DropSolution compute_drop_solution(const BallisticsInput& input)
   float acos_arg = 3 * q / (2 * p) * std::sqrt(-3 / p);
 
   if (acos_arg < -1 || acos_arg > 1) {
-    solution.status_code = 2;
+    solution.status_code = StatusCode::CalcEror;
     return solution;
   }
 
@@ -88,7 +88,7 @@ DropSolution compute_drop_solution(const BallisticsInput& input)
   float fire_x = drone_x + (input.target_x - drone_x) * ratio;
   float fire_y = drone_y + (input.target_y - drone_y) * ratio;
 
-  solution.status_code = 0;
+  solution.status_code = StatusCode::Ok;
   solution.drone_x = drone_x;
   solution.drone_y = drone_y;
   solution.fire_x = fire_x;

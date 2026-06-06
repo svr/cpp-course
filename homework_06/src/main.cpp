@@ -20,6 +20,13 @@ int main()
   inputfs.close();
 
   const DropSolution solution = compute_drop_solution(input);
+  if(solution.status_code == StatusCode::UknownAmmo) {
+      std::cerr << "Uknown ammo: " << input.ammo_name << "\n";
+      return 1;
+  } else if(solution.status_code == StatusCode::CalcEror) {
+      std::cerr << "Error in calculations. Height is too big: " << input.drone_z << "\n";
+      return 1;
+  }
 
   std::ofstream outputfs("output.txt");
   if (!outputfs) {
