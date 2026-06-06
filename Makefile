@@ -23,6 +23,7 @@ test: build
 
 format:
 	cmake-format -i --config-file=/.cmake-format.json homework_06/CMakeLists.txt
+	clang-format -i  homework_06/src/*.cpp  homework_06/include/*.hpp 
 
 lint: configure
 	clang-tidy $(SRCS) $(HEADERS) -p $(BUILD_DIR)
