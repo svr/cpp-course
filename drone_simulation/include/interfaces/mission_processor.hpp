@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <memory>
 
 #include "sim_step.hpp"
 #include "ballistic_solver.hpp"
@@ -8,9 +9,9 @@
 
 class MissionProcessor {
     private:
-    IBallisticSolver* solver;
-    ITargetProvider*  targetProvider;
-    IConfigLoader*    configLoader;
+    std::unique_ptr<IBallisticSolver> solver;
+    std::unique_ptr<ITargetProvider> targetProvider;
+    std::unique_ptr<IConfigLoader> configLoader;
 
     float currentTime = 0;
     int currentStep = 0;
@@ -22,12 +23,11 @@ class MissionProcessor {
     SimStep simStep;
 
     public:
-    MissionProcessor(IBallisticSolver* solver, ITargetProvider* targetProvider, IConfigLoader* configLoader);
-    ~MissionProcessor();
+    MissionProcessor(std::unique_ptr<IBallisticSolver> solver, std::unique_ptr<ITargetProvider> targetProvider, std::unique_ptr<IConfigLoader> configLoader);
     void init(const std::string& configfile, const std::string& ammofile, const std::string& targetsfile);
     bool hasNext() const;
     SimStep step();
     int getCurrentStep() const;
     void reset();
-    void changeSolver(IBallisticSolver* otherSolver);
+    void changeSolver(std::unique_ptr<IBallisticSolver> otherSolver);
 };
