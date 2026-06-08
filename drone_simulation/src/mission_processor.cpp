@@ -8,14 +8,8 @@
 #include "mission_processor.hpp"
 
 
-MissionProcessor::MissionProcessor(IBallisticSolver* solver, ITargetProvider* targetProvider, IConfigLoader* configLoader):
-solver{solver}, targetProvider{targetProvider}, configLoader{configLoader} {
-}
-
-MissionProcessor::~MissionProcessor() {
-    delete solver;
-    delete targetProvider;
-    delete configLoader;
+MissionProcessor::MissionProcessor(std::unique_ptr<IBallisticSolver> solver, std::unique_ptr<ITargetProvider> targetProvider, std::unique_ptr<IConfigLoader> configLoader):
+solver{std::move(solver)}, targetProvider{std::move(targetProvider)}, configLoader{std::move(configLoader)} {
 }
 
 void MissionProcessor::reset() {
@@ -37,8 +31,8 @@ void MissionProcessor::init(const std::string& configfile, const std::string& am
     reset();
 }
 
-void MissionProcessor::changeSolver(IBallisticSolver* otherSolver) {
-    solver = otherSolver;
+void MissionProcessor::changeSolver(std::unique_ptr<IBallisticSolver> otherSolver) {
+    solver = std::move(otherSolver);
 }
 
 bool MissionProcessor::hasNext() const {

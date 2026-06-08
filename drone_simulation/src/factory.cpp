@@ -6,23 +6,23 @@
 class JsonTargetProvider;
 class FileConfigLoader;
 
-IBallisticSolver* DroneSimulationFactory::createSolver(SolverType type) {
+std::unique_ptr<IBallisticSolver> DroneSimulationFactory::createSolver(SolverType type) {
     switch(type) {
         case SolverType::ANALYTICAL:
-            return new AnalyticalSolver();
+            return std::make_unique<AnalyticalSolver>();
     }
 }
 
-ITargetProvider* DroneSimulationFactory::createProvider(ProviderType type) {
+std::unique_ptr<ITargetProvider> DroneSimulationFactory::createProvider(ProviderType type) {
     switch(type) {
         case ProviderType::JSON:
-            return new JsonTargetProvider();
+            return std::make_unique<JsonTargetProvider>();
     }
 }
 
-IConfigLoader* DroneSimulationFactory::createLoader(LoaderType type) {
+std::unique_ptr<IConfigLoader> DroneSimulationFactory::createLoader(LoaderType type) {
     switch(type) {
         case LoaderType::FILE:
-            return new FileConfigLoader();
+            return std::make_unique<FileConfigLoader>();
     }
 }
