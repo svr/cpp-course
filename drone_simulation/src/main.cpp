@@ -32,16 +32,16 @@ int main() {
 
 
     while (mission.hasNext()) {
-        SimStep simStep = mission.step();
+        DroneContext ctx = mission.step();
 
         json step;
-        step["position"]        = {{"x", simStep.pos.x}, {"y", simStep.pos.y}};
-        step["direction"]       = simStep.direction;
-        step["state"]           = simStep.state;
-        step["targetIndex"]     = simStep.targetIdx;
-        step["dropPoint"]       = {{"x", simStep.dropPoint.x},       {"y", simStep.dropPoint.y}};
-        step["aimPoint"]        = {{"x", simStep.aimPoint.x},        {"y", simStep.aimPoint.y}};
-        step["predictedTarget"] = {{"x", simStep.predictedTarget.x}, {"y", simStep.predictedTarget.y}};
+        step["position"]        = {{"x", ctx.pos.x}, {"y", ctx.pos.y}};
+        step["direction"]       = ctx.direction;
+        step["state"]           = mission.getStateId();
+        step["targetIndex"]     = ctx.targetIdx;
+        step["dropPoint"]       = {{"x", ctx.dropPoint.x},       {"y", ctx.dropPoint.y}};
+        step["aimPoint"]        = {{"x", ctx.aimPoint.x},        {"y", ctx.aimPoint.y}};
+        step["predictedTarget"] = {{"x", ctx.predictedTarget.x}, {"y", ctx.predictedTarget.y}};
 
         simulationResult["steps"].push_back(step);
     }

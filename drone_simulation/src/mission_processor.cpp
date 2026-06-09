@@ -5,6 +5,8 @@
 #include "coord.hpp"
 #include "ammo_params.hpp"
 #include "drone_config.hpp"
+#include "drone_context.hpp"
+#include "state_stopped.hpp"
 #include "mission_processor.hpp"
 
 
@@ -17,11 +19,13 @@ void MissionProcessor::reset() {
     currentStep = 0;
 
     DroneConfig config = configLoader->getConfig();
-    simStep.speed = 0.0f;
-    simStep.pos = config.startPos;
-    simStep.direction = config.initialDir;
-    simStep.state = DroneState::STOPPED;
-    simStep.targetIdx = -1;
+    state = std::make_unique<StateStopped>();
+    ctx.config = config;
+    ctx.speed = 0.0f;
+    ctx.a     = 0.0f;
+    ctx.pos = config.startPos;
+    ctx.direction = config.initialDir;
+    ctx.targetIdx = -1;
 }
 
 void MissionProcessor::init(const std::string& configfile, const std::string& ammofile, const std::string& targetsfile) {
@@ -37,14 +41,18 @@ void MissionProcessor::changeSolver(std::unique_ptr<IBallisticSolver> otherSolve
 
 bool MissionProcessor::hasNext() const {
     DroneConfig config = configLoader->getConfig();
-    return currentStep < MAX_STEPS && distance(simStep.pos, simStep.dropPoint) > config.hitRadius;
+    return currentStep < MAX_STEPS && distance(ctx.pos, ctx.dropPoint) > config.hitRadius;
 }
 
 int MissionProcessor::getCurrentStep() const {
     return currentStep;
 }
 
-SimStep MissionProcessor::step() {
+int MissionProcessor::getStateId() const {
+    return state->id();
+}
+
+DroneContext MissionProcessor::step() {
     DroneConfig config = configLoader->getConfig();
     AmmoParams ammo = configLoader->getAmmoParams();
 
@@ -59,9 +67,9 @@ SimStep MissionProcessor::step() {
 
     float frac = (localTime - currentIdx * config.arrayTimeStep) / config.arrayTimeStep;
 
-    int prevTargetIdx = simStep.targetIdx;
+    int prevTargetIdx = ctx.targetIdx;
     float minFireTime = std::numeric_limits<float>::infinity();
-    float bestDirection = simStep.direction;
+    float bestDirection = ctx.direction;
 
     for (int targetNum = 0; targetNum < targetCount; ++targetNum) {
         Coord currTargetPos = targetProvider->getTarget(targetNum, currentIdx);
@@ -69,7 +77,7 @@ SimStep MissionProcessor::step() {
         Coord interpolatedPos = currTargetPos + (nextTargetPos - currTargetPos) * frac;
 
         float targetFlightTime = solver->calcFlightTime(
-            simStep.pos,
+            ctx.pos,
             interpolatedPos,
             config.attackSpeed,
             config.accelPath);
@@ -78,22 +86,22 @@ SimStep MissionProcessor::step() {
         Coord predictedTarget = interpolatedPos + velocity * targetFlightTime;
 
         Coord dropPoint = solver->solve(
-            simStep.pos,
+            ctx.pos,
             predictedTarget,
             config.altitude,
             ammo,
             config.attackSpeed);
 
         float fireTime = solver->calcFlightTime(
-            simStep.pos,
+            ctx.pos,
             dropPoint,
             config.attackSpeed,
             config.accelPath);
 
-        float nextDir = direction(dropPoint - simStep.pos);
+        float nextDir = direction(dropPoint - ctx.pos);
 
         if (targetNum != prevTargetIdx) {
-            float deltaAngle = std::abs(angleDifference(nextDir, simStep.direction));
+            float deltaAngle = std::abs(angleDifference(nextDir, ctx.direction));
             if (deltaAngle > config.turnThreshold) {
                 float decelerationTime = (2.0f * config.accelPath) / config.attackSpeed;
                 fireTime += decelerationTime;
@@ -102,99 +110,29 @@ SimStep MissionProcessor::step() {
         }
 
         if (fireTime < minFireTime) {
-            simStep.dropPoint = dropPoint;
-            simStep.predictedTarget = predictedTarget;
-            simStep.targetIdx = targetNum;
+            ctx.dropPoint = dropPoint;
+            ctx.predictedTarget = predictedTarget;
+            ctx.targetIdx = targetNum;
 
             bestDirection = nextDir;
             minFireTime = fireTime;
         }
     }
 
-    targetDirection = bestDirection;
+    ctx.targetDirection = bestDirection;
 
-    bool targetChanged =simStep.targetIdx != prevTargetIdx && prevTargetIdx != -1;
-    float deltaAngle = std::abs(angleDifference(targetDirection, simStep.direction));
+    ctx.targetChanged = (ctx.targetIdx != prevTargetIdx && prevTargetIdx != -1);
 
-    if (targetChanged &&
-        deltaAngle > config.turnThreshold &&
-        simStep.state != DroneState::DECELERATING &&
-        simStep.state != DroneState::TURNING) {
+    ctx.a = config.attackSpeed * config.attackSpeed / (2.0f * config.accelPath);
 
-        turnDuration = deltaAngle / config.angularSpeed;
-        turnStartDirection = simStep.direction;
-
-        if (simStep.state == DroneState::MOVING || simStep.state == DroneState::ACCELERATING) {
-            simStep.state = DroneState::DECELERATING;
-        }
-    }
-
-    float a = config.attackSpeed * config.attackSpeed / (2.0f * config.accelPath);
-
-    switch (simStep.state) {
-        case DroneState::STOPPED:
-            simStep.state = DroneState::ACCELERATING;
-            simStep.direction = targetDirection;
-            simStep.speed = std::min(config.attackSpeed, a * config.simTimeStep);
-            break;
-
-        case DroneState::ACCELERATING:
-            if (simStep.speed >= config.attackSpeed - EPSILON) {
-                simStep.state = DroneState::MOVING;
-                simStep.speed = config.attackSpeed;
-            } else {
-                simStep.speed = std::min(config.attackSpeed, simStep.speed + a * config.simTimeStep);
-            }
-            simStep.direction = targetDirection;
-            break;
-
-        case DroneState::MOVING:
-            simStep.speed = config.attackSpeed;
-            simStep.direction = targetDirection;
-            break;
-
-        case DroneState::DECELERATING:
-            simStep.speed = std::max(0.0f, simStep.speed - a * config.simTimeStep);
-            if (simStep.speed <= EPSILON) {
-                simStep.speed = 0.0f;
-                turnStartTime = currentTime;
-
-                if (turnDuration <= EPSILON) {
-                    simStep.direction = targetDirection;
-                    simStep.state = DroneState::ACCELERATING;
-                } else {
-                    simStep.state = DroneState::TURNING;
-                }
-            }
-            break;
-
-        case DroneState::TURNING: {
-            float turnElapsed = currentTime - turnStartTime;
-
-            if (turnElapsed >= turnDuration) {
-                simStep.direction = targetDirection;
-                simStep.state = DroneState::ACCELERATING;
-
-                simStep.speed = std::min(config.attackSpeed, a * config.simTimeStep);
-            } else {
-                float turnProgress = turnDuration > EPSILON ? turnElapsed / turnDuration : 1.0f;
-                turnProgress = std::clamp(turnProgress, 0.0f, 1.0f);
-
-                float angleDiff = angleDifference(targetDirection, turnStartDirection);
-
-                simStep.direction = turnStartDirection + angleDiff * turnProgress;
-                simStep.speed = 0.0f;
-            }
-            break;
-        }
-    }
+    state = std::move(state->execute(ctx));
 
     currentStep += 1;
     currentTime += config.simTimeStep;
 
-    simStep.aimPoint = solver->calcAimPoint(simStep.pos, simStep.direction, config.altitude, ammo, simStep.speed);
-    simStep.pos.x += simStep.speed * std::cos(simStep.direction) * config.simTimeStep;
-    simStep.pos.y += simStep.speed * std::sin(simStep.direction) * config.simTimeStep;
+    ctx.aimPoint = solver->calcAimPoint(ctx.pos, ctx.direction, config.altitude, ammo, ctx.speed);
+    ctx.pos.x += ctx.speed * std::cos(ctx.direction) * config.simTimeStep;
+    ctx.pos.y += ctx.speed * std::sin(ctx.direction) * config.simTimeStep;
 
-    return simStep;
+    return ctx;
 }

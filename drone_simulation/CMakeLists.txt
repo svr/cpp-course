@@ -10,9 +10,11 @@ FetchContent_MakeAvailable(json)
 file(GLOB CONFIG_LOADER_SOURCES src/config_loaders/*.cpp)
 file(GLOB SOLVER_SOURCES src/solvers/*.cpp)
 file(GLOB TARGET_PROVIDER_SOURCES src/target_providers/*.cpp)
+file(GLOB DRONE_STATE_SOURCES src/state/*.cpp)
 
 add_library(mission_processor
     src/coord.cpp
+    ${DRONE_STATE_SOURCES}
     src/mission_processor.cpp
 )
 
