@@ -1,13 +1,13 @@
 {
   "drone": {
     "position": {
-      "x": 200,
-      "y": 200
+      "x": 150,
+      "y": 150
     },
     "altitude": 100,
-    "initialDirection": 0.5,
-    "attackSpeed": 12,
-    "accelerationPath": 15,
+    "initialDirection": 0,
+    "attackSpeed": 10,
+    "accelerationPath": 10,
     "angularSpeed": 1,
     "turnThreshold": 0.1
   },
