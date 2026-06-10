@@ -28,9 +28,10 @@ void MissionProcessor::reset() {
     ctx.targetIdx = -1;
 }
 
-void MissionProcessor::init(const std::string& configfile, const std::string& ammofile, const std::string& targetsfile) {
-    configLoader->load(configfile, ammofile);
-    targetProvider->load(targetsfile);
+void MissionProcessor::init() {
+    configLoader->load();
+    targetProvider->load();
+    solver->load();
 
     reset();
 }
