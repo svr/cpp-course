@@ -28,7 +28,7 @@ class MissionProcessor {
 
     public:
     MissionProcessor(std::unique_ptr<IBallisticSolver> solver, std::unique_ptr<ITargetProvider> targetProvider, std::unique_ptr<IConfigLoader> configLoader);
-    void init(const std::string& configfile, const std::string& ammofile, const std::string& targetsfile);
+    void init();
     bool hasNext() const;
     DroneContext step();
     int getCurrentStep() const;

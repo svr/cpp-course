@@ -61,7 +61,7 @@ AmmoParams FileConfigLoader::loadAmmoParams(const std::string& name, const std::
     throw std::runtime_error("Error: Unknown ammo name ");
 };
 
-void FileConfigLoader::load(const std::string& configfile = "config.json" , const std::string& ammofile = "ammo.json") {
+void FileConfigLoader::load() {
     config = loadConfig(configfile);
     ammo = loadAmmoParams(config.ammoName, ammofile);
 }

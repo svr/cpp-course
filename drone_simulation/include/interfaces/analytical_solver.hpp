@@ -1,5 +1,4 @@
 #pragma once
-#include <cmath>
 
 #include "ballistic_solver.hpp"
 
@@ -9,6 +8,7 @@ class AnalyticalSolver : public IBallisticSolver {
 
     public:
     ~AnalyticalSolver() override = default;
+    void load() override {};
     float calcFlightTime(const Coord& dronePos, const Coord& targetPos, float attackSpeed, float accelerationPath) const override;
     Coord solve(const Coord& dronePos, const Coord& targetPos, float altitude, const AmmoParams& ammoParams, float speed) const override;
     Coord calcAimPoint(const Coord& dronePos, float dir, float altitude, const AmmoParams& ammoParams, float speed) const override;
