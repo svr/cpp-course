@@ -15,13 +15,13 @@ int main() {
     DroneSimulationFactory factory;
 
     MissionProcessor mission(
-        factory.createSolver(SolverType::ANALYTICAL),
-        factory.createProvider(ProviderType::JSON),
-        factory.createLoader(LoaderType::FILE)
+        factory.createSolver(SolverType::TABLE, "ballistic_table.txt"),
+        factory.createProvider(ProviderType::JSON, "targets.json"),
+        factory.createLoader(LoaderType::FILE, "config.json", "ammo.json")
     );
 
     try {
-        mission.init("config.json", "ammo.json", "targets.json");
+        mission.init();
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
         return 1;
