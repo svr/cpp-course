@@ -28,7 +28,9 @@ DroneConfig FileConfigLoader::loadConfig(const std::string& file) const {
     config.simTimeStep   = configJson["simulation"]["timeStep"];
     config.hitRadius     = configJson["simulation"]["hitRadius"];
     config.arrayTimeStep = configJson["targetArrayTimeStep"];
-
+    config.targetTimeStep  = configJson["simulation"]["targetTimeStep"];
+    config.physicsTimeStep = configJson["simulation"]["physicsTimeStep"];
+    config.timeScale       = configJson["simulation"]["timeScale"];
     config.ammoName = configJson["ammo"].get<std::string>();
 
     return config;

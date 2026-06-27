@@ -1,12 +1,12 @@
 #pragma once
 #include <memory>
 
-#include "ballistic_solver.hpp"
-#include "config_loader.hpp"
-#include "target_provider.hpp"
+class IBallisticSolver;
+class ITargetProvider;
+class IConfigLoader;
 
 enum class SolverType   { ANALYTICAL, TABLE };
-enum class ProviderType { JSON };
+enum class ProviderType { JSON, THREAD_SAFE };
 enum class LoaderType   { FILE };
 
 class DroneSimulationFactory {

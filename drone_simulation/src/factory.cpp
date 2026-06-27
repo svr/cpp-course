@@ -5,9 +5,11 @@
 #include "table_solver.hpp"
 #include "file_config_loader.hpp"
 #include "json_target_provider.hpp"
+#include "thread_safe_target_provider.hpp"
 
 class JsonTargetProvider;
 class FileConfigLoader;
+class ThreadSafeTargetProvider;
 
 std::unique_ptr<IBallisticSolver> DroneSimulationFactory::createSolver(SolverType type, const std::string& datafile) {
     switch(type) {
@@ -24,6 +26,8 @@ std::unique_ptr<ITargetProvider> DroneSimulationFactory::createProvider(Provider
     switch(type) {
         case ProviderType::JSON:
             return std::make_unique<JsonTargetProvider, const std::string&>(targetsfile);
+        case ProviderType::THREAD_SAFE:
+            return std::make_unique<ThreadSafeTargetProvider, const std::string&>(targetsfile);
         default:
             throw std::invalid_argument("Unsupported ProviderType");
     }
