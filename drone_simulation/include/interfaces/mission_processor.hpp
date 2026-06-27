@@ -1,38 +1,26 @@
 #pragma once
-#include <string>
 #include <memory>
+#include <nlohmann/json.hpp>
+#include "runnable_thread.hpp"
+#include "drone_physics.hpp"
+#include "drone_config.hpp"
 
-#include "drone_context.hpp"
-#include "drone_state.hpp"
-#include "ballistic_solver.hpp"
-#include "target_provider.hpp"
-#include "config_loader.hpp"
+class MissionProcessor : public RunnableThread {
+private:
+    std::shared_ptr<DronePhysics> dronePhysics;
+    DroneConfig config;
 
-class MissionProcessor {
-    private:
-    std::unique_ptr<IBallisticSolver> solver;
-    std::unique_ptr<ITargetProvider> targetProvider;
-    std::unique_ptr<IConfigLoader> configLoader;
-    std::unique_ptr<IDroneState> state;
-
-
-    float currentTime = 0;
     int currentStep = 0;
-    float targetDirection = 0;
-    float turnStartTime = 0;
-    float turnDuration = 0;
-    float turnStartDirection = 0;
-    float a = 0;
+    const int MAX_STEPS = 10000;
 
-    DroneContext ctx;
 
-    public:
-    MissionProcessor(std::unique_ptr<IBallisticSolver> solver, std::unique_ptr<ITargetProvider> targetProvider, std::unique_ptr<IConfigLoader> configLoader);
-    void init();
-    bool hasNext() const;
-    DroneContext step();
-    int getCurrentStep() const;
-    int getStateId() const;
-    void reset();
-    void changeSolver(std::unique_ptr<IBallisticSolver> otherSolver);
+    nlohmann::json simulationLog;
+
+public:
+    MissionProcessor(std::shared_ptr<DronePhysics> physics);
+    virtual ~MissionProcessor() = default;
+    void init(const DroneConfig&);
+    void run() override;
+
+    nlohmann::json getSimulationLog() const { return simulationLog; }
 };

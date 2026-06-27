@@ -1,139 +1,54 @@
-#include <cmath>
-#include <string>
-#include <algorithm>
-
-#include "coord.hpp"
-#include "ammo_params.hpp"
-#include "drone_config.hpp"
-#include "drone_context.hpp"
-#include "state_stopped.hpp"
+#include <thread>
+#include <chrono>
+#include <iostream>
 #include "mission_processor.hpp"
 
 
-MissionProcessor::MissionProcessor(std::unique_ptr<IBallisticSolver> solver, std::unique_ptr<ITargetProvider> targetProvider, std::unique_ptr<IConfigLoader> configLoader):
-solver{std::move(solver)}, targetProvider{std::move(targetProvider)}, configLoader{std::move(configLoader)} {
-}
 
-void MissionProcessor::reset() {
-    currentTime = 0;
+MissionProcessor::MissionProcessor(std::shared_ptr<DronePhysics> physics): dronePhysics(std::move(physics)) {}
+
+void MissionProcessor::init(const DroneConfig& cfg) {
+    config = cfg;
     currentStep = 0;
-
-    DroneConfig config = configLoader->getConfig();
-    state = std::make_unique<StateStopped>();
-    ctx.config = config;
-    ctx.speed = 0.0f;
-    ctx.a     = 0.0f;
-    ctx.pos = config.startPos;
-    ctx.direction = config.initialDir;
-    ctx.targetIdx = -1;
+    simulationLog["steps"] = nlohmann::json::array();
+    isReady = true;
 }
 
-void MissionProcessor::init() {
-    configLoader->load();
-    targetProvider->load();
-    solver->load();
-
-    reset();
-}
-
-void MissionProcessor::changeSolver(std::unique_ptr<IBallisticSolver> otherSolver) {
-    solver = std::move(otherSolver);
-}
-
-bool MissionProcessor::hasNext() const {
-    DroneConfig config = configLoader->getConfig();
-    return currentStep < MAX_STEPS && distance(ctx.pos, ctx.dropPoint) > config.hitRadius;
-}
-
-int MissionProcessor::getCurrentStep() const {
-    return currentStep;
-}
-
-int MissionProcessor::getStateId() const {
-    return state->id();
-}
-
-DroneContext MissionProcessor::step() {
-    DroneConfig config = configLoader->getConfig();
-    AmmoParams ammo = configLoader->getAmmoParams();
-
-    int targetTimeSteps = targetProvider->getTargetTimeSteps();
-    int targetCount = targetProvider->getTargetCount();
-
-    float cycleTime = targetTimeSteps * config.arrayTimeStep;
-    float localTime = std::fmod(currentTime, cycleTime);
-
-    int currentIdx = static_cast<int>(localTime / config.arrayTimeStep);
-    int nextIdx = (currentIdx + 1) % targetTimeSteps;
-
-    float frac = (localTime - currentIdx * config.arrayTimeStep) / config.arrayTimeStep;
-
-    int prevTargetIdx = ctx.targetIdx;
-    float minFireTime = std::numeric_limits<float>::infinity();
-    float bestDirection = ctx.direction;
-
-    for (int targetNum = 0; targetNum < targetCount; ++targetNum) {
-        Coord currTargetPos = targetProvider->getTarget(targetNum, currentIdx);
-        Coord nextTargetPos = targetProvider->getTarget(targetNum, nextIdx);
-        Coord interpolatedPos = currTargetPos + (nextTargetPos - currTargetPos) * frac;
-
-        float targetFlightTime = solver->calcFlightTime(
-            ctx.pos,
-            interpolatedPos,
-            config.attackSpeed,
-            config.accelPath);
-
-        Coord velocity = (nextTargetPos - currTargetPos) / config.arrayTimeStep;
-        Coord predictedTarget = interpolatedPos + velocity * targetFlightTime;
-
-        Coord dropPoint = solver->solve(
-            ctx.pos,
-            predictedTarget,
-            config.altitude,
-            ammo,
-            config.attackSpeed);
-
-        float fireTime = solver->calcFlightTime(
-            ctx.pos,
-            dropPoint,
-            config.attackSpeed,
-            config.accelPath);
-
-        float nextDir = direction(dropPoint - ctx.pos);
-
-        if (targetNum != prevTargetIdx) {
-            float deltaAngle = std::abs(angleDifference(nextDir, ctx.direction));
-            if (deltaAngle > config.turnThreshold) {
-                float decelerationTime = (2.0f * config.accelPath) / config.attackSpeed;
-                fireTime += decelerationTime;
-                fireTime += deltaAngle / config.angularSpeed;
-            }
-        }
-
-        if (fireTime < minFireTime) {
-            ctx.dropPoint = dropPoint;
-            ctx.predictedTarget = predictedTarget;
-            ctx.targetIdx = targetNum;
-
-            bestDirection = nextDir;
-            minFireTime = fireTime;
-        }
+void MissionProcessor::run() {
+    while (!isStarted) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    ctx.targetDirection = bestDirection;
+    while (currentStep < MAX_STEPS) {
+        DroneContext snapshotCtx = dronePhysics->step(config.simTimeStep);
 
-    ctx.targetChanged = (ctx.targetIdx != prevTargetIdx && prevTargetIdx != -1);
+        DroneTelemetry telemetry = dronePhysics->getTelemetry();
+        int currentStateId = dronePhysics->getCurrentStateId();
 
-    ctx.a = config.attackSpeed * config.attackSpeed / (2.0f * config.accelPath);
+        float dx = snapshotCtx.pos.x - snapshotCtx.dropPoint.x;
+        float dy = snapshotCtx.pos.y - snapshotCtx.dropPoint.y;
+        float distToDrop = std::hypot(dx, dy);
 
-    state = std::move(state->execute(ctx));
+        if (distToDrop <= config.hitRadius) {
+            std::cout << "Simulation finished after " << currentStep << " steps\n";
+            break;
+        }
 
-    currentStep += 1;
-    currentTime += config.simTimeStep;
+        nlohmann::json stepLog;
+        stepLog["position"]         = {{"x", snapshotCtx.pos.x}, {"y", snapshotCtx.pos.y}};
+        stepLog["direction"]        = snapshotCtx.direction;
+        stepLog["state"]            = currentStateId;
+        stepLog["targetIndex"]      = snapshotCtx.targetIdx;
+        stepLog["dropPoint"]        = {{"x", snapshotCtx.dropPoint.x}, {"y", snapshotCtx.dropPoint.y}};
+        stepLog["aimPoint"]         = {{"x", snapshotCtx.aimPoint.x},  {"y", snapshotCtx.aimPoint.y}};
+        stepLog["predictedTarget"]  = {{"x", snapshotCtx.predictedTarget.x}, {"y", snapshotCtx.predictedTarget.y}};
+        stepLog["timeSecSinceStart"] = telemetry.timeSecSinceStart;
 
-    ctx.aimPoint = solver->calcAimPoint(ctx.pos, ctx.direction, config.altitude, ammo, ctx.speed);
-    ctx.pos.x += ctx.speed * std::cos(ctx.direction) * config.simTimeStep;
-    ctx.pos.y += ctx.speed * std::sin(ctx.direction) * config.simTimeStep;
+        simulationLog["steps"].push_back(stepLog);
+        currentStep += 1;
 
-    return ctx;
+        float sleepDurationSec = config.simTimeStep / config.timeScale;
+        std::this_thread::sleep_for(std::chrono::duration<float>(sleepDurationSec));
+    }
+    simulationLog["totalSteps"] = currentStep;
 }
