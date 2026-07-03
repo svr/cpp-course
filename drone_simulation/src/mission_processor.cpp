@@ -10,8 +10,14 @@
 #include "mission_processor.hpp"
 
 
-MissionProcessor::MissionProcessor(std::unique_ptr<IBallisticSolver> solver, std::unique_ptr<ITargetProvider> targetProvider, std::unique_ptr<IConfigLoader> configLoader):
-solver{std::move(solver)}, targetProvider{std::move(targetProvider)}, configLoader{std::move(configLoader)} {
+MissionProcessor::MissionProcessor(IBallisticSolver* solver, ITargetProvider* targetProvider, IConfigLoader* configLoader):
+solver{solver}, targetProvider{targetProvider}, configLoader{configLoader} {
+}
+
+MissionProcessor::~MissionProcessor() {
+    delete solver;
+    delete targetProvider;
+    delete configLoader;
 }
 
 void MissionProcessor::reset() {
@@ -28,10 +34,9 @@ void MissionProcessor::reset() {
     ctx.targetIdx = -1;
 }
 
-void MissionProcessor::init() {
-    configLoader->load();
-    targetProvider->load();
-    solver->load();
+void MissionProcessor::init(const std::string& configfile, const std::string& ammofile, const std::string& targetsfile) {
+    configLoader->load(configfile, ammofile);
+    targetProvider->load(targetsfile);
 
     reset();
 }
@@ -135,5 +140,5 @@ DroneContext MissionProcessor::step() {
     ctx.pos.x += ctx.speed * std::cos(ctx.direction) * config.simTimeStep;
     ctx.pos.y += ctx.speed * std::sin(ctx.direction) * config.simTimeStep;
 
-    return ctx;
+    return simStep;
 }

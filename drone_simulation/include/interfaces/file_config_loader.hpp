@@ -17,7 +17,7 @@ class FileConfigLoader : public IConfigLoader {
     public:
     FileConfigLoader(const std::string& configfile, const std::string& ammofile): configfile{configfile}, ammofile{ammofile} {};
     ~FileConfigLoader() override = default;
-    void load() override;
+    void load(const std::string& configfile, const std::string& ammofile) override;
     DroneConfig getConfig() const override;
     AmmoParams getAmmoParams() const override;
 };

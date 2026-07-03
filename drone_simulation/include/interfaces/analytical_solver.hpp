@@ -1,5 +1,4 @@
 #pragma once
-
 #include "ballistic_solver.hpp"
 
 class AnalyticalSolver : public IBallisticSolver {

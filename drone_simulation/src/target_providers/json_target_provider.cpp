@@ -9,8 +9,8 @@ using json = nlohmann::json;
 #include "common.hpp"
 #include "json_target_provider.hpp"
 
-void JsonTargetProvider::load() {
-    std::ifstream targetsfs(targetsfile);
+void JsonTargetProvider::load(const std::string& file) {
+    std::ifstream targetsfs(file);
     if (!targetsfs) {
         throw std::runtime_error("Failed to open targets file");
     }

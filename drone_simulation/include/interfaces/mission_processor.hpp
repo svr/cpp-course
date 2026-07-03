@@ -1,9 +1,6 @@
 #pragma once
 #include <string>
-#include <memory>
 
-#include "drone_context.hpp"
-#include "drone_state.hpp"
 #include "ballistic_solver.hpp"
 #include "target_provider.hpp"
 #include "config_loader.hpp"
@@ -27,8 +24,9 @@ class MissionProcessor {
     DroneContext ctx;
 
     public:
-    MissionProcessor(std::unique_ptr<IBallisticSolver> solver, std::unique_ptr<ITargetProvider> targetProvider, std::unique_ptr<IConfigLoader> configLoader);
-    void init();
+    MissionProcessor(IBallisticSolver* solver, ITargetProvider* targetProvider, IConfigLoader* configLoader);
+    ~MissionProcessor();
+    void init(const std::string& configfile, const std::string& ammofile, const std::string& targetsfile);
     bool hasNext() const;
     DroneContext step();
     int getCurrentStep() const;
