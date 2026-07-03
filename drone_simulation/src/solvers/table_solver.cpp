@@ -70,15 +70,11 @@ Coord TableSolver::solve(const Coord& dronePos, const Coord& targetPos, float al
 
     if (currentRange < EPSILON) return targetPos;
 
-    BallisticResult result = lookup(altitude, speed, ammoParams.mass, ammoParams.drag, currentRange);
-
-    if (std::abs(currentRange - result.hDist) < EPSILON) {
-        return targetPos;
-    }
+    BallisticResult result = lookup(altitude, speed, ammoParams.mass, ammoParams.drag, ammoParams.lift);
 
     Coord impactPoint;
-    impactPoint.x = dronePos.x + (dx / currentRange) * result.hDist;
-    impactPoint.y = dronePos.y + (dy / currentRange) * result.hDist;
+    impactPoint.x = targetPos.x - (dx / currentRange) * result.hDist;
+    impactPoint.y = targetPos.y - (dy / currentRange) * result.hDist;
 
     return impactPoint;
 }
@@ -99,8 +95,7 @@ float TableSolver::calcFlightTime(const Coord& dronePos, const Coord& targetPos,
 
 Coord TableSolver::calcAimPoint(const Coord& dronePos, float dir, float altitude,
                                const AmmoParams& ammoParams, float speed) const {
-    float maxRange = axisL.empty() ? 100.0f : axisL.back();
-    BallisticResult result = lookup(altitude, speed, ammoParams.mass, ammoParams.drag, maxRange);
+    BallisticResult result = lookup(altitude, speed, ammoParams.mass, ammoParams.drag, ammoParams.lift);
 
     Coord aimPoint;
     aimPoint.x = dronePos.x + result.hDist * std::cos(dir);
