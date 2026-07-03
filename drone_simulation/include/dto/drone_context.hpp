@@ -7,7 +7,6 @@
 struct DroneContext {
     float direction;
     float targetDirection;
-    float desiredDirection;
 
     float a;
     float speed;
