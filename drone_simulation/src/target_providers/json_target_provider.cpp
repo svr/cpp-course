@@ -43,10 +43,10 @@ int JsonTargetProvider::getTargetTimeSteps() const {
 }
 
 Coord JsonTargetProvider::getTarget(int num, int timeIndex) const {
-    if (num > targetCount) {
+    if (num >= targetCount) {
         throw std::out_of_range("num exceeds target count");
     }
-    if (timeIndex > timeSteps) {
+    if (timeIndex >= timeSteps) {
         throw std::out_of_range("index exceeds target time steps");
     }
     return targets[num][timeIndex];
