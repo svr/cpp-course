@@ -1,10 +1,8 @@
 # Етап 1: збирання
 # MAVSDK у цьому ДЗ зафiксовано на конкретнiй версiї, щоб не шукати пакет вручну.
+FROM ubuntu:24.04 AS builder
+
 ARG MAVSDK_VERSION=2.12.9
-
-FROM _____ AS builder
-
-ARG MAVSDK_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Блок залежностей надано: iнструменти збирання, CMake та wget для MAVSDK.
@@ -22,13 +20,13 @@ WORKDIR /src
 COPY . .
 
 # Заповнити команду CMake-збирання.
-RUN _____
+RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug && cmake --build build
 
 # Етап 2: запуск
 # Для простоти ДЗ той самий MAVSDK .deb встановлюється i в образ запуску.
-FROM _____
+FROM ubuntu:24.04
 
-ARG MAVSDK_VERSION
+ARG MAVSDK_VERSION=2.12.9
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
