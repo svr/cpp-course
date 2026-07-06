@@ -10,32 +10,104 @@
 
 static constexpr uint16_t STUB_PORT = 14560;
 
+std::ostream& operator<<(std::ostream& os, C2State state) {
+    switch (state) {
+        case C2State::DISARMED:     return os << "DISARMED";
+        case C2State::ARMED_HOLD:   return os << "ARMED_HOLD";
+        case C2State::ARMED_GUIDED: return os << "ARMED_GUIDED";
+        case C2State::ARMED_MANUAL: return os << "ARMED_MANUAL";
+        default:                    return os << "UNKNOWN";
+    }
+}
+
 struct C2Controller::Impl {
     C2State state = C2State::DISARMED;
+    FcLink fc_link;
+    UdpSocket udp_socket;
+    std::ofstream log_file;
+    bool connected = false;
 
-    // TODO: додати FcLink, UdpSocket, лог-файл та прапорцi стану.
-    // FcLink потребує fc_port у конструкторi Impl.
-    // UdpSocket має слухати STUB_PORT.
+    Impl(uint16_t fc_port)
+        : fc_link(fc_port), udp_socket(STUB_PORT) {}
+
+    void init() {
+        std::ofstream("/tmp/c2_healthy").close();
+        connected = true;
+    }
 
     void transition(C2State next) {
-        // TODO: якщо next != state, записати "PREV -> NEW" у stdout i лог,
-        // потiм оновити state. Якщо стан не змiнився, нiчого не писати.
-        (void)next;
+        if(next != state) {
+            std::cout << "[C2] state: " << state << " -> " << next << std::endl;
+            log_file << "[C2] state: " << state << " -> " << next << "\n";
+            state = next;
+        }
+    }
+    void forward_next_point() {
+        // Отримати точку маршруту у форматi JSON вiд auto_stub.
+        std::string json_str;
+        char buf[1024];
+        ssize_t n = udp_socket.recv(buf, sizeof(buf));
+        if (n > 0) {
+            json_str.assign(buf, n);
+            try {
+                auto json = nlohmann::json::parse(json_str);
+                float north = json.at("north_m").get<float>();
+                float east  = json.at("east_m").get<float>();
+                fc_link.go_to_ned(north, east);
+                log_file << "[C2] fwd: north=" << north << " east=" << east << "\n";
+            } catch (const nlohmann::json::exception& e) {
+                std::cerr << "[C2] error: invalid JSON from auto_stub: " << e.what() << "\n";
+            }
+        }
+
+    }
+
+    void hold() {
+        fc_link.hold();
+        log_blocked();
+    }
+
+    void log_blocked() {
+        log_file << "[C2] blocked: waypoint in " << state << "\n";
     }
 };
 
-C2Controller::C2Controller(uint16_t fc_port)
-    : impl_(std::make_unique<Impl>())
-{
-    // TODO: передати fc_port в Impl та вiдкрити /var/log/c2/c2.log.
-    (void)fc_port;
+C2Controller::C2Controller(uint16_t fc_port): impl_(std::make_unique<Impl>(fc_port)) {
+    impl_->log_file.open("/var/log/c2/c2.log", std::ios::app);
 }
 
 C2Controller::~C2Controller() = default;
 
 void C2Controller::tick() {
-    // TODO: healthcheck, оновлення C2State, читання точки маршруту,
-    // передавання або блокування команди згiдно з поточним станом.
+    if(!impl_->fc_link.is_connected()) {
+        return;
+    }
+
+    if(!impl_->connected) {
+        impl_->init();
+    }
+    if(!impl_->fc_link.is_armed()) {
+        impl_->transition(C2State::DISARMED);
+    } else {
+        switch(impl_->fc_link.flight_mode()) {
+            case FcLink::FlightMode::Hold:
+                impl_->transition(C2State::ARMED_HOLD);
+                impl_->hold();
+                break;
+            case FcLink::FlightMode::Guided:
+                impl_->transition(C2State::ARMED_GUIDED);
+                impl_->forward_next_point();
+                break;
+            case FcLink::FlightMode::Manual:
+                impl_->transition(C2State::ARMED_MANUAL);
+                impl_->log_blocked();
+                break;
+            default:
+                impl_->transition(C2State::ARMED_HOLD);
+                impl_->hold();
+                break;
+        }
+    }
 }
 
 C2State C2Controller::current_state() const {

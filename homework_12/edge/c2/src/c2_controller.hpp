@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <ostream>
 
 enum class C2State {
     DISARMED,
@@ -9,6 +10,8 @@ enum class C2State {
     ARMED_GUIDED,
     ARMED_MANUAL,
 };
+
+std::ostream& operator<<(std::ostream& os, C2State state);
 
 // C2-сервiс для арбiтражу команд.
 // Читає MAVLink-телеметрiю з fc_sim через MAVSDK та точки маршруту
