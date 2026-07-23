@@ -90,10 +90,6 @@ void C2Controller::tick() {
         impl_->transition(C2State::DISARMED);
     } else {
         switch(impl_->fc_link.flight_mode()) {
-            case FcLink::FlightMode::Hold:
-                impl_->transition(C2State::ARMED_HOLD);
-                impl_->hold();
-                break;
             case FcLink::FlightMode::Guided:
                 impl_->transition(C2State::ARMED_GUIDED);
                 impl_->forward_next_point();
@@ -102,10 +98,16 @@ void C2Controller::tick() {
                 impl_->transition(C2State::ARMED_MANUAL);
                 impl_->log_blocked();
                 break;
+            case FcLink::FlightMode::Hold:
             default:
+            {
+                const bool entering_hold = (impl_->state != C2State::ARMED_HOLD);
                 impl_->transition(C2State::ARMED_HOLD);
-                impl_->hold();
+                if (entering_hold) {
+                    impl_->hold();
+                }
                 break;
+            }
         }
     }
 }
