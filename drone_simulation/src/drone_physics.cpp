@@ -1,14 +1,16 @@
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <thread>
 #include <chrono>
+#include <vector>
 
 #include "drone_physics.hpp"
 #include "state_stopped.hpp"
 
 void DronePhysics::init(const DroneConfig& config, float physicsStep, float scale,
                         std::unique_ptr<IBallisticSolver> bSolver,
-                        std::shared_ptr<ThreadSafeTargetProvider> tProvider,
+                        std::shared_ptr<ITargetProvider> tProvider,
                         std::unique_ptr<IConfigLoader> cLoader) {
     solver = std::move(bSolver);
     targetProvider = tProvider;
@@ -97,7 +99,19 @@ DroneContext DronePhysics::step(float simTimeStep) {
 
     state = std::move(state->execute(ctx));
 
+    float remaining = simTimeStep;
+    while (remaining > 0.0f) {
+        float dt = std::min(remaining, physicsTimeStep);
+        pos.x += ctx.speed * std::cos(ctx.direction) * dt;
+        pos.y += ctx.speed * std::sin(ctx.direction) * dt;
+        totalSimulatedTime += dt;
+        remaining -= dt;
+    }
+
+    ctx.pos = pos;
+
     ctx.aimPoint = solver->calcAimPoint(ctx.pos, ctx.direction, config.altitude, ammo, ctx.speed);
+    updateTelemetry();
 
     return ctx;
 }
@@ -107,34 +121,8 @@ void DronePhysics::run() {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    auto lastTime = std::chrono::steady_clock::now();
-    float accumulator = 0.0f;
-
+    // Integration is mission-driven via step(simTimeStep) to keep exactly one physics driver.
     while (!shouldStop.load()) {
-        auto currentTime = std::chrono::steady_clock::now();
-        float dtReal = std::chrono::duration<float>(currentTime - lastTime).count();
-        lastTime = currentTime;
-
-        accumulator += dtReal * timeScale;
-
-        bool physicsUpdated = false;
-
-        if (accumulator >= physicsTimeStep) {
-            std::lock_guard<std::mutex> lock(physicsMutex);
-            while (accumulator >= physicsTimeStep) {
-                pos.x += ctx.speed * std::cos(ctx.direction) * physicsTimeStep;
-                pos.y += ctx.speed * std::sin(ctx.direction) * physicsTimeStep;
-                totalSimulatedTime += physicsTimeStep;
-
-                accumulator -= physicsTimeStep;
-                physicsUpdated = true;
-            }
-
-            if (physicsUpdated) {
-                updateTelemetry();
-            }
-        }
-
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }

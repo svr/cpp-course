@@ -38,6 +38,19 @@ int JsonTargetProvider::getTargetCount() const {
     return targetCount;
 }
 
+Target JsonTargetProvider::getTarget(int targetNum) const {
+    if (targetNum < 0 || targetNum >= targetCount) {
+        throw std::out_of_range("num exceeds target count");
+    }
+
+    Target target;
+    if (timeSteps > 0) {
+        target.pos = targets[targetNum][0];
+    }
+    target.velocity = {0.0f, 0.0f};
+    return target;
+}
+
 int JsonTargetProvider::getTargetTimeSteps() const {
     return timeSteps;
 }
