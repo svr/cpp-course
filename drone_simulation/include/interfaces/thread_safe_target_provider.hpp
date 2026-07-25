@@ -20,18 +20,30 @@ private:
     DroneConfig config;
 
     int currentIdx = 0;
+
+    Target getCurrentTargetUnlocked(int targetNum) const {
+        if (targetNum >= 0 && targetNum < (int)currentTargets.size()) {
+            return currentTargets.at(targetNum);
+        }
+        return Target{};
+    }
 public:
     ThreadSafeTargetProvider(const std::string& targetsfile) : targetsfile{targetsfile} {};
     ~ThreadSafeTargetProvider() = default;
 
-    void init(const DroneConfig& cfg) {
+    void init(const DroneConfig& cfg) override {
         config = cfg;
     }
 
     void load() override;
     void run() override;
 
+    bool isThreadReady() const override { return RunnableThread::isThreadReady(); }
+    void start() override { RunnableThread::start(); }
+    void stop() override { RunnableThread::stop(); }
+
     int getTargetTimeSteps() const override {
+        std::lock_guard<std::mutex> lock(providerMutex);
         return timeSteps;
     }
 
@@ -45,14 +57,11 @@ public:
         if (num >= 0 && num < (int)targets.size() && timeIndex >= 0 && timeIndex < (int)targets[num].size()) {
             return targets[num][timeIndex];
         }
-        return getTarget(num).pos;
+        return getCurrentTargetUnlocked(num).pos;
     }
 
-    Target getTarget(int targetNum) const {
+    Target getTarget(int targetNum) const override {
         std::lock_guard<std::mutex> lock(providerMutex);
-        if (targetNum >= 0 && targetNum < (int)currentTargets.size()) {
-            return currentTargets.at(targetNum);
-        }
-        return Target{};
+        return getCurrentTargetUnlocked(targetNum);
     }
 };

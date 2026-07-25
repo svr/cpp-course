@@ -8,13 +8,13 @@
 #include "drone_telemetry.hpp"
 #include "ballistic_solver.hpp"
 #include "config_loader.hpp"
-#include "thread_safe_target_provider.hpp"
+#include "target_provider.hpp"
 #include "drone_state.hpp"
 
 class DronePhysics : public RunnableThread {
 private:
     std::unique_ptr<IBallisticSolver> solver;
-    std::shared_ptr<ThreadSafeTargetProvider> targetProvider;
+    std::shared_ptr<ITargetProvider> targetProvider;
     std::unique_ptr<IConfigLoader> configLoader;
     DroneContext ctx;
     std::unique_ptr<IDroneState> state;
@@ -33,7 +33,7 @@ public:
     ~DronePhysics() = default;
     void init(const DroneConfig& config, float physicsStep, float scale,
               std::unique_ptr<IBallisticSolver> solver,
-              std::shared_ptr<ThreadSafeTargetProvider> provider,
+              std::shared_ptr<ITargetProvider> provider,
               std::unique_ptr<IConfigLoader> loader);
 
     void run() override;

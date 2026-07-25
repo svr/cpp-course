@@ -17,6 +17,7 @@ class JsonTargetProvider : public ITargetProvider {
     ~JsonTargetProvider() = default;
     void load() override;
     int getTargetCount() const override;
+    Target getTarget(int targetNum) const override;
     int getTargetTimeSteps() const override;
     Coord getTarget(int num, int timeIndex) const override;
 };
