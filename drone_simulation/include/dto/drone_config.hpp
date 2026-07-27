@@ -19,4 +19,5 @@ struct DroneConfig {
     float hitRadius;
     float angularSpeed;
     float turnThreshold;
+    int nTargets;
 };

@@ -30,6 +30,11 @@ ARG DEBIAN_FRONTEND="noninteractive"
 COPY apt-packages.in /tmp/apt.in
 RUN apt update && \
   grep -vE '^\s*#' /tmp/apt.in | xargs apt install --no-install-recommends -y && \
+  ARCH=$(if [ "$TARGETARCH" = "arm64" ]; then echo "arm64"; else echo "amd64"; fi) && \
+  curl -sSL -O "http://mirrors.kernel.org/ubuntu/pool/universe/libg/libgpiod/libgpiod3_2.2.1-3build1_${ARCH}.deb" && \
+  curl -sSL -O "http://mirrors.kernel.org/ubuntu/pool/universe/libg/libgpiod/libgpiod-dev_2.2.1-3build1_${ARCH}.deb" && \
+  dpkg -i "libgpiod3_2.2.1-3build1_${ARCH}.deb" "libgpiod-dev_2.2.1-3build1_${ARCH}.deb" || apt-get install -f -y && \
+  rm -f "libgpiod3_2.2.1-3build1_${ARCH}.deb" "libgpiod-dev_2.2.1-3build1_${ARCH}.deb" && \
   rm -rf /var/lib/apt/lists/* && apt-get clean -y && rm /tmp/apt.in && \
   sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
   locale-gen
