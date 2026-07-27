@@ -1,11 +1,9 @@
 #include <thread>
 #include <chrono>
 #include <iostream>
+#include <cmath>
 #include "mission_processor.hpp"
 
-
-
-MissionProcessor::MissionProcessor(std::shared_ptr<DronePhysics> physics): dronePhysics(std::move(physics)) {}
 
 void MissionProcessor::init(const DroneConfig& cfg) {
     config = cfg;
@@ -20,19 +18,24 @@ void MissionProcessor::run() {
     }
 
     while (currentStep < MAX_STEPS) {
-        DroneContext snapshotCtx = dronePhysics->step(config.simTimeStep);
+        DroneContext snapshotCtx = dronePhysics->step(config.simTimeStep / config.timeScale);
 
         DroneTelemetry telemetry = dronePhysics->getTelemetry();
         int currentStateId = dronePhysics->getCurrentStateId();
 
-        float dx = snapshotCtx.pos.x - snapshotCtx.dropPoint.x;
-        float dy = snapshotCtx.pos.y - snapshotCtx.dropPoint.y;
-        float distToDrop = std::hypot(dx, dy);
+        float dx = snapshotCtx.aimPoint.x - snapshotCtx.predictedTarget.x;
+        float dy = snapshotCtx.aimPoint.y - snapshotCtx.predictedTarget.y;
+        float impactError = std::hypot(dx, dy);
 
-        if (distToDrop <= config.hitRadius) {
+        if (impactError <= config.hitRadius) {
+            std::cout << "Distance to drop point: " << impactError << ", Hit radius: " << config.hitRadius << ", Target index: " << snapshotCtx.targetIdx << std::endl;
             std::cout << "Simulation finished after " << currentStep << " steps\n";
-            break;
+            gpio->drop();
+            simulationLog["totalSteps"] = currentStep;
+            return;
         }
+
+        dronePhysics->sendControl(snapshotCtx, config.simTimeStep);
 
         nlohmann::json stepLog;
         stepLog["position"]         = {{"x", snapshotCtx.pos.x}, {"y", snapshotCtx.pos.y}};

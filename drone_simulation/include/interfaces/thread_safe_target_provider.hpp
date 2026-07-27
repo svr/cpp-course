@@ -5,11 +5,10 @@
 
 #include "common.hpp"
 #include "coord.hpp"
-#include "runnable_thread.hpp"
 #include "target_provider.hpp"
 #include "drone_config.hpp"
 
-class ThreadSafeTargetProvider : public ITargetProvider, public RunnableThread {
+class ThreadSafeTargetProvider : public ITargetProvider {
 private:
     int targetCount{0};
     int timeSteps{0};
@@ -37,10 +36,6 @@ public:
 
     void load() override;
     void run() override;
-
-    bool isThreadReady() const override { return RunnableThread::isThreadReady(); }
-    void start() override { RunnableThread::start(); }
-    void stop() override { RunnableThread::stop(); }
 
     int getTargetTimeSteps() const override {
         std::lock_guard<std::mutex> lock(providerMutex);
