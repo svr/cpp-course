@@ -99,7 +99,7 @@ TEST(TurretControllerTest, ComputeServoCommandLeft) {
 
   ASSERT_EQ(servo_command.direction, antidrone_turret::msg::ServoCommand::LEFT);
   ASSERT_EQ(servo_command.target_x, target_x);
-  ASSERT_EQ(servo_command.error_x, 320.0f - target_x);
+  ASSERT_EQ(servo_command.error_x, target_x - 320.0f);
 }
 
 TEST(TurretControllerTest, ComputeServoCommandCenter) {
@@ -113,7 +113,7 @@ TEST(TurretControllerTest, ComputeServoCommandCenter) {
 
   ASSERT_EQ(servo_command.direction, antidrone_turret::msg::ServoCommand::CENTER);
   ASSERT_EQ(servo_command.target_x, target_x);
-  ASSERT_EQ(servo_command.error_x, 320.0f - target_x);
+  ASSERT_EQ(servo_command.error_x, target_x - 320.0f);
 }
 
 TEST(TurretControllerTest, ComputeServoCommandRight) {
@@ -127,7 +127,7 @@ TEST(TurretControllerTest, ComputeServoCommandRight) {
 
   ASSERT_EQ(servo_command.direction, antidrone_turret::msg::ServoCommand::RIGHT);
   ASSERT_EQ(servo_command.target_x, target_x);
-  ASSERT_EQ(servo_command.error_x, 320.0f - target_x);
+  ASSERT_EQ(servo_command.error_x, target_x - 320.0f);
 }
 
 TEST(TurretControllerTest, ComputeGimbalCommandUp) {
