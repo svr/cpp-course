@@ -63,7 +63,7 @@ namespace antidrone_turret {
             antidrone_turret::msg::ServoCommand command;
             command.direction = direction;
             command.target_x = target_x;
-            command.error_x = 320.0f - target_x;
+            command.error_x = target_x - 320.0f;
 
             return command;
         }
