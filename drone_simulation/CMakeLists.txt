@@ -6,6 +6,16 @@ include(FetchContent)
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
 FetchContent_MakeAvailable(json)
 
+FetchContent_Declare(
+    cpp-httplib
+    GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
+    GIT_TAG v0.51.0
+)
+
+FetchContent_MakeAvailable(cpp-httplib)
+
+find_package(Threads REQUIRED)
+
 file(GLOB CONFIG_LOADER_SOURCES src/config_loaders/*.cpp)
 file(GLOB SOLVER_SOURCES src/solvers/*.cpp)
 file(GLOB TARGET_PROVIDER_SOURCES src/target_providers/*.cpp)
@@ -36,3 +46,10 @@ add_executable(drone_simulation
     src/main.cpp
 )
 target_link_libraries(drone_simulation PRIVATE mission_processor nlohmann_json::nlohmann_json)
+
+add_executable(uploader
+    src/uploader_main.cpp
+    src/result_uploader.cpp
+)
+target_include_directories(uploader PUBLIC include/ include/dto)
+target_link_libraries(uploader PRIVATE httplib nlohmann_json::nlohmann_json Threads::Threads)
