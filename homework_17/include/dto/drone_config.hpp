@@ -1,0 +1,22 @@
+#pragma once
+#include <string>
+
+#include "common.hpp"
+#include "coord.hpp"
+
+struct DroneConfig {
+    Coord startPos;
+    float altitude;
+    float initialDir;
+    float attackSpeed;
+    float accelPath;
+    std::string ammoName;
+    float arrayTimeStep;
+    float simTimeStep;
+    float targetTimeStep;
+    float physicsTimeStep;
+    float timeScale;
+    float hitRadius;
+    float angularSpeed;
+    float turnThreshold;
+};
