@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CMake: configure Debug",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "--preset",
+        "Debug"
+      ],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "CMake: build (Debug)",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "--preset",
+        "Debug"
+      ],
+      "dependsOn": "CMake: configure Debug",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "type": "shell",
+      "label": "Build + Flash",
+      "command": "STM32_Programmer_CLI.exe",
+      "args": [
+        "-c",
+        "port=SWD",
+        "-d",
+        "${workspaceFolder}\\build\\Debug\\homework_18.elf",
+        "-rst"
+      ],
+      "dependsOn": "CMake: build (Debug)",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
